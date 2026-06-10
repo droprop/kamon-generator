@@ -1,0 +1,182 @@
+:root {
+  --ink: #1a1a1a;
+  --paper: #fcfbf8;
+  --ink-soft: #555;
+  --line: #d8d4cc;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100%;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'Hiragino Mincho ProN', 'Hiragino Serif', 'Yu Mincho', YuMincho,
+    'Noto Serif JP', serif;
+  line-height: 1.8;
+  -webkit-font-smoothing: antialiased;
+}
+
+main {
+  max-width: 30rem;
+  margin: 0 auto;
+  padding: 4rem 1.5rem 3rem;
+  text-align: center;
+}
+
+h1 {
+  font-size: 1.8rem;
+  font-weight: 600;
+  letter-spacing: 0.5em;
+  text-indent: 0.5em; /* letter-spacing の右端ぶんを相殺して光学的に中央へ */
+  margin: 0 0 1rem;
+}
+
+.lead {
+  font-size: 0.92rem;
+  color: var(--ink-soft);
+  margin: 0 0 3rem;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  align-items: center;
+  margin-bottom: 2.5rem;
+}
+
+#name-input {
+  width: 100%;
+  max-width: 22rem;
+  padding: 0.6rem 0.2rem;
+  font: inherit;
+  font-size: 1.05rem;
+  text-align: center;
+  color: var(--ink);
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--ink);
+  border-radius: 0;
+  outline: none;
+}
+
+#name-input::placeholder {
+  color: #aaa;
+  font-size: 0.88rem;
+}
+
+button {
+  font: inherit;
+  font-size: 0.95rem;
+  letter-spacing: 0.2em;
+  text-indent: 0.2em;
+  color: var(--ink);
+  background: transparent;
+  border: 1px solid var(--ink);
+  padding: 0.55rem 2.2rem;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+button:hover {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+#kamon-container {
+  width: min(78vw, 21rem);
+  margin: 0 auto 1.4rem;
+}
+
+#kamon-container svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+@keyframes kamon-in {
+  from {
+    opacity: 0;
+    transform: scale(0.93);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.kamon-enter {
+  animation: kamon-in 0.55s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kamon-enter {
+    animation: none;
+  }
+}
+
+#kamon-owner {
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+  margin: 0;
+}
+
+#kamon-name {
+  font-size: 1.35rem;
+  letter-spacing: 0.25em;
+  text-indent: 0.25em;
+  margin: 0.3rem 0 1.8rem;
+}
+
+.actions {
+  display: flex;
+  gap: 0.8rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.actions button {
+  font-size: 0.82rem;
+  padding: 0.45rem 1.2rem;
+}
+
+footer {
+  margin-top: 4rem;
+  border-top: 1px solid var(--line);
+  padding-top: 1.5rem;
+}
+
+footer p {
+  font-size: 0.74rem;
+  color: var(--ink-soft);
+  text-align: left;
+  margin: 0;
+}
+
+/* デバッグギャラリー(?debug=gallery) */
+#gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 1.2rem;
+  max-width: 64rem;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+#gallery figure {
+  margin: 0;
+}
+
+#gallery figcaption {
+  font-size: 0.7rem;
+  color: var(--ink-soft);
+  margin-top: 0.3rem;
+}

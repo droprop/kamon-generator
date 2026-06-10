@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>あなたの紋 — 名前から生まれる紋様ジェネレーター</title>
+    <meta name="description" content="名前を入力すると、世界にひとつの紋様が生まれます。同じ名前からは必ず同じ紋が。家紋風のジェネラティブデザイン。" />
+    <meta property="og:title" content="あなたの紋" />
+    <meta property="og:description" content="名前から生まれる、世界にひとつの紋様。" />
+    <meta property="og:type" content="website" />
+    <!-- デプロイ後、og:image は絶対URLに書き換えること(多くのクローラは相対URLを解釈しない) -->
+    <meta property="og:image" content="og.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='44' fill='none' stroke='%231a1a1a' stroke-width='7'/%3E%3Ccircle cx='50' cy='50' r='16' fill='%231a1a1a'/%3E%3C/svg%3E" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>あなたの紋</h1>
+        <p class="lead">名前から生まれる、世界にひとつの紋様。<br />同じ名前からは、必ず同じ紋が。</p>
+      </header>
+
+      <form id="form" autocomplete="off">
+        <input
+          id="name-input"
+          type="text"
+          placeholder="名前を入力(ひらがな・漢字・ローマ字)"
+          aria-label="名前"
+          maxlength="60"
+        />
+        <button type="submit" id="generate-btn">紋を生成</button>
+      </form>
+
+      <section id="result" hidden>
+        <div id="kamon-container" aria-live="polite"></div>
+        <p id="kamon-owner"></p>
+        <p id="kamon-name"></p>
+        <div class="actions">
+          <button type="button" id="save-btn">画像を保存</button>
+          <button type="button" id="share-btn">Xでシェア</button>
+          <button type="button" id="invert-btn" aria-pressed="false">白抜き反転</button>
+        </div>
+      </section>
+
+      <footer>
+        <p>
+          ここに表示される紋様は実在の家紋ではなく、入力された文字列から機械的に生成される
+          家紋風のオリジナル・ジェネラティブデザインです。生成はすべてブラウザ内で完結し、
+          入力内容が送信されることはありません。
+        </p>
+      </footer>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
