@@ -5,6 +5,7 @@ import { renderKamon, type RenderOptions } from './render';
 import { kamonName, MOTIF_NAMES } from './name';
 import { exportPng } from './export';
 import { playCeremony, reducedMotion, type Ceremony } from './ceremony';
+import { mulberry32 } from './rng';
 
 const INK = '#211c14';
 const PAPER = '#fbf8ee';
@@ -16,6 +17,11 @@ const frame = document.getElementById('kamon-frame') as HTMLElement;
 const container = document.getElementById('kamon-container') as HTMLElement;
 const bloom = document.getElementById('bloom') as HTMLElement;
 const shockEl = document.getElementById('shockwave') as HTMLElement;
+const linesEl = document.getElementById('burst-lines') as unknown as SVGSVGElement;
+const splashEl = document.getElementById('splash-layer') as unknown as SVGSVGElement;
+const elementEl = document.getElementById('element-layer') as unknown as SVGSVGElement;
+const shineEl = document.getElementById('shine') as HTMLElement;
+const incantEl = document.getElementById('incant') as HTMLElement;
 const ownerEl = document.getElementById('kamon-owner') as HTMLElement;
 const nameEl = document.getElementById('kamon-name') as HTMLElement;
 const sealEl = document.getElementById('kamon-seal') as HTMLElement;
@@ -46,6 +52,28 @@ function colors(inverted: boolean): RenderOptions {
   return inverted ? { ink: PAPER, paper: INK } : { ink: INK, paper: PAPER };
 }
 
+/* 集中線を一度だけ組み立てる(配置は固定シードで決定論的に) */
+(function buildBurstLines(): void {
+  const NS = 'http://www.w3.org/2000/svg';
+  const rng = mulberry32(7);
+  const COUNT = 16;
+  for (let i = 0; i < COUNT; i++) {
+    const a = (Math.PI * 2 * i) / COUNT + (rng() - 0.5) * 0.32;
+    const r1 = 71 + rng() * 4;
+    const r2 = r1 + 9 + rng() * 17;
+    const line = document.createElementNS(NS, 'line');
+    line.setAttribute('x1', (100 + r1 * Math.sin(a)).toFixed(1));
+    line.setAttribute('y1', (100 - r1 * Math.cos(a)).toFixed(1));
+    line.setAttribute('x2', (100 + r2 * Math.sin(a)).toFixed(1));
+    line.setAttribute('y2', (100 - r2 * Math.cos(a)).toFixed(1));
+    line.setAttribute('stroke', 'currentColor');
+    line.setAttribute('stroke-width', (1.1 + rng() * 1.7).toFixed(2));
+    line.setAttribute('stroke-linecap', 'round');
+    line.setAttribute('opacity', (0.45 + rng() * 0.45).toFixed(2));
+    linesEl.appendChild(line);
+  }
+})();
+
 /** 銘・落款・紋籍の各テキストを用意する(銘は一文字ずつ span に分割) */
 function setTexts(): void {
   if (!state) return;
@@ -64,9 +92,22 @@ function setTexts(): void {
     `紋籍 第${p.seed.toString(16).toUpperCase().padStart(8, '0')}号`;
 }
 
-/** クライマックス(紋の完成)以降の余韻: 衝撃波・残光・捺印・銘と落款の顕現 */
-function reveal(at: number): void {
+/** 爆ぜとクライマックス以降の余韻: 詠唱・膨張・衝撃波・集中線・残光・捺印・銘の顕現 */
+function reveal(burst: number, at: number): void {
   const ease = 'cubic-bezier(0.2, 0.7, 0.2, 1)';
+
+  // 詠唱: 落墨のあいだ、結びの文言が紋場に浮かび、爆ぜと同時に霧散する
+  reveals.push(
+    incantEl.animate(
+      [
+        { opacity: 0, transform: 'translateY(8px)', filter: 'blur(4px)' },
+        { opacity: 0.85, transform: 'none', filter: 'blur(0px)', offset: 0.3 },
+        { opacity: 0.85, offset: 0.78 },
+        { opacity: 0, transform: 'translateY(-8px) scale(1.05)', filter: 'blur(5px)' },
+      ],
+      { duration: burst + 240, easing: 'ease-in-out' },
+    ),
+  );
   const show = (el: HTMLElement, delay: number, dur = 480): void => {
     reveals.push(
       el.animate(
@@ -76,60 +117,91 @@ function reveal(at: number): void {
     );
   };
 
-  // 打ち込みの衝撃: 沈み込んで据わる紋場、走り抜ける衝撃波、金の残光
+  // ぐわっと: 落墨から完成まで、紋場そのものが膨らみ続ける
+  reveals.push(
+    frame.animate(
+      [{ transform: 'scale(0.94)' }, { transform: 'scale(1)' }],
+      { duration: Math.max(1, at - 150), easing: 'cubic-bezier(0.16, 0.7, 0.2, 1)', fill: 'both' },
+    ),
+  );
+
+  // 打ち込みの衝撃: 沈み込んで据わる紋場、衝撃波、墨の集中線、朱の残光
   reveals.push(
     frame.animate(
       [
         { transform: 'scale(1)' },
-        { transform: 'scale(0.972)', offset: 0.3 },
-        { transform: 'scale(1.012)', offset: 0.65 },
+        { transform: 'scale(0.968)', offset: 0.3 },
+        { transform: 'scale(1.015)', offset: 0.65 },
         { transform: 'scale(1)' },
       ],
-      { delay: Math.max(0, at - 160), duration: 380, easing: 'ease-in-out' },
+      { delay: Math.max(0, at - 160), duration: 360, easing: 'ease-in-out' },
     ),
   );
   reveals.push(
     shockEl.animate(
       [
         { opacity: 0.85, transform: 'scale(0.94)' },
-        { opacity: 0, transform: 'scale(1.22)' },
+        { opacity: 0, transform: 'scale(1.26)' },
       ],
-      { delay: Math.max(0, at - 120), duration: 650, easing: 'cubic-bezier(0.1, 0.6, 0.3, 1)' },
+      { delay: Math.max(0, at - 120), duration: 600, easing: 'cubic-bezier(0.1, 0.6, 0.3, 1)' },
+    ),
+  );
+  reveals.push(
+    linesEl.animate(
+      [
+        { opacity: 0, transform: 'scale(0.62)' },
+        { opacity: 0.95, transform: 'scale(0.92)', offset: 0.18 },
+        { opacity: 0, transform: 'scale(1.12)' },
+      ],
+      { delay: Math.max(0, at - 130), duration: 420, easing: 'cubic-bezier(0.1, 0.7, 0.2, 1)' },
     ),
   );
   reveals.push(
     bloom.animate(
       [{ opacity: 0 }, { opacity: 0.85, offset: 0.22 }, { opacity: 0 }],
-      { delay: Math.max(0, at - 120), duration: 1100, easing: 'ease-out' },
+      { delay: Math.max(0, at - 120), duration: 1000, easing: 'ease-out' },
     ),
   );
 
-  show(ownerEl, at + 60);
-  const chars = nameEl.querySelectorAll('span');
-  chars.forEach((s, i) => {
-    reveals.push(
-      s.animate(
-        [
-          { opacity: 0, transform: 'translateY(0.35em)', filter: 'blur(5px)' },
-          { opacity: 1, transform: 'none', filter: 'blur(0px)' },
-        ],
-        { delay: at + 160 + i * 45, duration: 430, easing: ease, fill: 'backwards' },
-      ),
-    );
-  });
-  const sealAt = at + 240 + chars.length * 45;
+  // ズバンの締め: 十字斬(ceremony側)に続き、刃金の光が紋の表面を走り抜ける
+  reveals.push(
+    shineEl.animate(
+      [
+        { opacity: 0, transform: 'translateX(-130%)' },
+        { opacity: 1, offset: 0.25 },
+        { opacity: 0, transform: 'translateX(130%)' },
+      ],
+      { delay: at + 300, duration: 480, easing: 'cubic-bezier(0.3, 0, 0.2, 1)' },
+    ),
+  );
+
+  // 銘のカットイン: 納刀の一閃(ceremony側)とともに、銘の柱が刃のように斬り込む
+  show(ownerEl, at + 40);
+  reveals.push(
+    nameEl.animate(
+      [
+        { opacity: 0, transform: 'translateY(-72px) skewY(6deg) scale(1.12)' },
+        { opacity: 1, transform: 'translateY(5px) skewY(-2deg) scale(1)', offset: 0.6 },
+        { opacity: 1, transform: 'translateY(0) skewY(0deg) scale(1)' },
+      ],
+      { delay: at + 600, duration: 320, easing: 'cubic-bezier(0.2, 0.9, 0.25, 1)', fill: 'backwards' },
+    ),
+  );
+
+  // 落款は勢いよく捺す
+  const sealAt = at + 960;
   reveals.push(
     sealEl.animate(
       [
-        { opacity: 0, transform: 'scale(2.3) rotate(-14deg)' },
-        { opacity: 1, transform: 'scale(0.88) rotate(-2deg)', offset: 0.6 },
+        { opacity: 0, transform: 'scale(2.6) rotate(-16deg)' },
+        { opacity: 1, transform: 'scale(0.86) rotate(-2deg)', offset: 0.6 },
         { opacity: 1, transform: 'scale(1) rotate(-3deg)' },
       ],
-      { delay: sealAt, duration: 260, easing: 'cubic-bezier(0.3, 1.2, 0.3, 1)', fill: 'backwards' },
+      { delay: sealAt, duration: 240, easing: 'cubic-bezier(0.3, 1.2, 0.3, 1)', fill: 'backwards' },
     ),
   );
-  show(metaEl, sealAt + 140);
-  show(actionsEl, sealAt + 260, 560);
+  show(metaEl, sealAt + 120);
+  show(actionsEl, sealAt + 220, 520);
 }
 
 function draw(withCeremony: boolean): void {
@@ -158,12 +230,18 @@ function draw(withCeremony: boolean): void {
   }
 
   if (withCeremony && !reducedMotion()) {
-    ceremony = playCeremony(svg, plan, { inverted: state.inverted, seed: state.params.seed });
-    reveal(ceremony.climaxAt);
+    ceremony = playCeremony(svg, plan, {
+      inverted: state.inverted,
+      seed: state.params.seed,
+      splash: splashEl,
+      element: elementEl,
+      motif: state.params.motif,
+    });
+    reveal(ceremony.burstAt, ceremony.climaxAt);
   }
 }
 
-function generate(rawName: string): void {
+function generate(rawName: string, withCeremony: boolean = true): void {
   const name = normalizeName(rawName);
   if (!name) {
     input.focus();
@@ -172,7 +250,7 @@ function generate(rawName: string): void {
   const params = generateKamon(name);
   state = { name, params, monName: kamonName(params), inverted: state?.inverted ?? false };
   input.blur();
-  draw(true);
+  draw(withCeremony);
   const url = new URL(location.href);
   url.searchParams.set('n', name);
   history.replaceState(null, '', url);
@@ -180,7 +258,7 @@ function generate(rawName: string): void {
 
 form.addEventListener('submit', (e) => {
   e.preventDefault();
-  generate(input.value);
+  generate(input.value, true);
 });
 
 saveBtn.addEventListener('click', () => {
@@ -251,6 +329,6 @@ if (query.get('debug') === 'gallery') {
   const initial = query.get('n');
   if (initial) {
     input.value = initial;
-    generate(initial);
+    generate(initial, false);
   }
 }

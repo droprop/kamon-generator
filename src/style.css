@@ -22,6 +22,11 @@
   box-sizing: border-box;
 }
 
+/* 初期ロード時の非表示要素のちらつき(FOUC)を防止 */
+[hidden] {
+  display: none !important;
+}
+
 /*
  * 地のグラデーションは html(=文書全体の高さ)に敷く。
  * body に敷くと描画基準がビューポート1枚分になり、スクロール先で
@@ -119,6 +124,15 @@ main {
   height: auto;
 }
 
+/* 儀式の題辞 */
+.rite {
+  font-size: 0.7rem;
+  letter-spacing: 0.6em;
+  text-indent: 0.6em;
+  color: var(--kin);
+  margin: 0 0 0.55rem;
+}
+
 h1 {
   font-size: 2.1rem;
   font-weight: 600;
@@ -131,7 +145,23 @@ h1 {
 .lead {
   font-size: 0.92rem;
   color: var(--dim);
-  margin: 0 0 clamp(1.3rem, 3.2vh, 2.4rem);
+  margin: 0;
+}
+
+header {
+  margin-bottom: clamp(1.3rem, 3.2vh, 2.4rem);
+}
+
+/* 筆の一条(両端が細る斬撃形)の罫 */
+header::after {
+  content: '';
+  display: block;
+  width: 11rem;
+  height: 5px;
+  margin: 1.3rem auto 0;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 6' preserveAspectRatio='none'%3E%3Cpath d='M0 3 Q100 0 200 3 Q100 6 0 3 Z' fill='%23211c14'/%3E%3C/svg%3E")
+    center / 100% 100% no-repeat;
+  opacity: 0.45;
 }
 
 /* ---------- 入力 ---------- */
@@ -147,23 +177,25 @@ form {
 #name-input {
   width: 100%;
   max-width: 23rem;
-  padding: 0.65rem 0.2rem;
+  padding: 0.65rem 0.2rem 0.8rem;
   font: inherit;
   font-size: 1.08rem;
   text-align: center;
   color: var(--text);
-  background: transparent;
   border: none;
-  border-bottom: 1px solid rgba(143, 117, 54, 0.5);
   border-radius: 0;
   outline: none;
   caret-color: var(--shu);
-  transition: border-color 0.25s, box-shadow 0.25s;
+  /* 下線も筆の一条で引く */
+  background: transparent
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 360 4' preserveAspectRatio='none'%3E%3Cpath d='M0 2 Q180 0 360 2 Q180 4 0 2 Z' fill='%23211c14' fill-opacity='0.45'/%3E%3C/svg%3E")
+    center bottom / 100% 3px no-repeat;
+  transition: box-shadow 0.25s;
 }
 
 #name-input:focus {
-  border-bottom-color: var(--kin);
-  box-shadow: 0 12px 20px -16px rgba(143, 117, 54, 0.6);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 360 4' preserveAspectRatio='none'%3E%3Cpath d='M0 2 Q180 0 360 2 Q180 4 0 2 Z' fill='%238f7536'/%3E%3C/svg%3E");
+  box-shadow: 0 14px 22px -16px rgba(143, 117, 54, 0.6);
 }
 
 #name-input::placeholder {
@@ -174,10 +206,11 @@ form {
 
 /* ---------- ボタン ---------- */
 
+/* ボタンはすべて刀で斬り落としたような切り落とし角(対角の二隅) */
 button {
   font: inherit;
   cursor: pointer;
-  border-radius: 999px;
+  border-radius: 0;
 }
 
 #generate-btn {
@@ -189,25 +222,23 @@ button {
   background: linear-gradient(180deg, #cb4d3c 0%, var(--shu) 45%, var(--shu-deep) 100%);
   border: none;
   padding: 0.85rem 3.2rem;
-  box-shadow:
-    0 10px 26px -10px rgba(153, 41, 29, 0.55),
-    inset 0 1px 0 rgba(255, 255, 255, 0.28),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.25);
-  transition: transform 0.18s ease, box-shadow 0.25s ease, filter 0.18s ease;
+  clip-path: polygon(
+    16px 0, 100% 0, 100% calc(100% - 16px),
+    calc(100% - 16px) 100%, 0 100%, 0 16px
+  );
+  /* clip-path は box-shadow ごと切り抜くため、外影は drop-shadow で落とす */
+  filter: drop-shadow(0 10px 16px rgba(153, 41, 29, 0.4));
+  transition: transform 0.18s ease, filter 0.18s ease;
 }
 
 #generate-btn:hover {
   transform: translateY(-1px);
-  filter: brightness(1.07);
-  box-shadow:
-    0 14px 32px -10px rgba(153, 41, 29, 0.6),
-    inset 0 1px 0 rgba(255, 255, 255, 0.28),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.25);
+  filter: brightness(1.07) drop-shadow(0 13px 20px rgba(153, 41, 29, 0.45));
 }
 
 #generate-btn:active {
   transform: translateY(0) scale(0.97);
-  filter: brightness(0.96);
+  filter: brightness(0.96) drop-shadow(0 8px 12px rgba(153, 41, 29, 0.4));
 }
 
 .actions {
@@ -226,6 +257,10 @@ button {
   color: var(--text);
   background: rgba(255, 255, 255, 0.25);
   border: 1px solid rgba(42, 36, 26, 0.3);
+  clip-path: polygon(
+    9px 0, 100% 0, 100% calc(100% - 9px),
+    calc(100% - 9px) 100%, 0 100%, 0 9px
+  );
   transition: border-color 0.2s, background-color 0.2s, color 0.2s;
 }
 
@@ -253,13 +288,11 @@ button {
   width: min(74vw, 19.5rem, 48vh);
 }
 
-/* 額装の金の罫 */
-.frame::before {
-  content: '';
+/* 結界の目盛環(金の細環 + 60刻みのティック) */
+.stage-ring {
   position: absolute;
-  inset: -11px;
-  border: 1px solid rgba(143, 117, 54, 0.4);
-  border-radius: 50%;
+  inset: -8%;
+  color: var(--kin);
   pointer-events: none;
 }
 
@@ -313,6 +346,69 @@ button {
   pointer-events: none;
 }
 
+/* 打ち込みの瞬間に弾ける墨の集中線 */
+.burst-lines {
+  position: absolute;
+  inset: -24%;
+  color: var(--sumi);
+  opacity: 0;
+  transform-origin: 50% 50%;
+  pointer-events: none;
+}
+
+/* 紋場の一回り外まで墨が飛び散る飛墨レイヤー(中身は ceremony.ts が生成) */
+.splash-layer {
+  position: absolute;
+  inset: -35%;
+  pointer-events: none;
+}
+
+/* 紋場の約2倍を覆う属性レイヤー(風・雪・雷など。中身は ceremony.ts が生成) */
+.element-layer {
+  position: absolute;
+  inset: -55%;
+  pointer-events: none;
+}
+
+/* 詠唱: 落墨のあいだ紋場に浮かぶ結びの文言 */
+.incant {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  font-size: 0.95rem;
+  letter-spacing: 0.34em;
+  color: rgba(33, 28, 20, 0.8);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* 完成後、紋の表面を走り抜ける刃金の光 */
+.shine-wrap {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.shine {
+  position: absolute;
+  inset: -30%;
+  background: linear-gradient(
+    105deg,
+    rgba(255, 253, 242, 0) 40%,
+    rgba(255, 253, 242, 0.95) 50%,
+    rgba(255, 253, 242, 0) 60%
+  );
+  opacity: 0;
+  transform: translateX(-130%);
+}
+
 /* ---------- 紋帳の記載(縦書きの銘と落款) ---------- */
 
 .registry {
@@ -330,9 +426,9 @@ button {
   margin: 0;
   writing-mode: vertical-rl;
   text-orientation: upright;
-  font-size: 1.42rem;
-  font-weight: 500;
-  letter-spacing: 0.32em;
+  font-size: 1.55rem;
+  font-weight: 600;
+  letter-spacing: 0.3em;
   color: var(--text);
   white-space: nowrap;
 }

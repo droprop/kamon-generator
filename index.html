@@ -14,9 +14,41 @@
     <meta property="og:image" content="https://your-kamon.vercel.app/og.png" />
     <meta name="twitter:card" content="summary_large_image" />
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='44' fill='none' stroke='%23211c14' stroke-width='7'/%3E%3Ccircle cx='50' cy='50' r='16' fill='%23bc4232'/%3E%3C/svg%3E" />
+    <!--
+      リロード時の白ちらつき防止:
+      地色はCSS到着前から効くよう、最小限だけ先にインラインで当てる。
+      本体CSS(html への radial-gradient)が後勝ちで上書きする。
+    -->
+    <style>
+      html {
+        background: #f1ead8;
+      }
+    </style>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <!--
+      フォントCSSは描画をブロックさせない(スマホでの白画面の主因)。
+      まずフォールバック明朝で描画し、読み込み完了後に media を切り替えて適用する。
+    -->
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@400;500;600;700&display=swap" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+      media="print"
+      onload="this.media='all'"
+    />
+    <noscript>
+      <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    </noscript>
+    <style>
+      /* CSSロード遅延による画面のホワイトフラッシュ(真っ白になる現象)を防ぐためのベース背景色 */
+      html {
+        background-color: #fbf8ee;
+      }
+      body {
+        background-color: transparent;
+      }
+    </style>
   </head>
   <body>
     <!-- 環境光: 紋の作図を思わせるコンパス円がゆっくりと巡る -->
@@ -27,6 +59,11 @@
           <circle cx="500" cy="500" r="300" stroke-opacity="0.10" stroke-dasharray="2 10" />
           <circle cx="500" cy="500" r="412" stroke-opacity="0.08" />
           <circle cx="500" cy="500" r="478" stroke-opacity="0.06" stroke-dasharray="1 16" />
+        </g>
+        <!-- 大筆の気配: 画面を抱く二条の筆の弧 -->
+        <g fill="none" stroke-linecap="round">
+          <path d="M 130 340 A 430 430 0 0 1 610 90" stroke="#211c14" stroke-width="30" stroke-opacity="0.018" />
+          <path d="M 870 680 A 430 430 0 0 1 390 915" stroke="#8f7536" stroke-width="22" stroke-opacity="0.055" />
         </g>
       </svg>
     </div>
@@ -39,6 +76,7 @@
             <circle cx="50" cy="50" r="15" fill="currentColor" />
           </svg>
         </div>
+        <p class="rite">結 紋 の 儀</p>
         <h1>あなたの紋</h1>
         <p class="lead">名前から生まれる、世界にひとつの紋様。<br />同じ名前からは、必ず同じ紋が。</p>
       </header>
@@ -51,15 +89,25 @@
           aria-label="名前"
           maxlength="60"
         />
-        <button type="submit" id="generate-btn">紋を生成</button>
+        <button type="submit" id="generate-btn">紋を結ぶ</button>
       </form>
 
       <section id="result" hidden>
         <div class="stage">
           <div class="frame" id="kamon-frame">
+            <svg id="element-layer" class="element-layer" viewBox="0 0 200 200" aria-hidden="true"></svg>
+            <!-- 結界の目盛環 -->
+            <svg class="stage-ring" viewBox="0 0 200 200" aria-hidden="true">
+              <circle cx="100" cy="100" r="99" fill="none" stroke="currentColor" stroke-width="0.5" opacity="0.55" />
+              <circle cx="100" cy="100" r="95" fill="none" stroke="currentColor" stroke-width="2.6" pathLength="360" stroke-dasharray="0.6 5.4" opacity="0.35" />
+            </svg>
             <div id="kamon-container" aria-live="polite"></div>
+            <p class="incant" id="incant" aria-hidden="true">名を以て、紋と結ぶ</p>
+            <div class="shine-wrap" aria-hidden="true"><div class="shine" id="shine"></div></div>
             <div class="bloom" id="bloom" aria-hidden="true"></div>
             <div class="shockwave" id="shockwave" aria-hidden="true"></div>
+            <svg id="splash-layer" class="splash-layer" viewBox="0 0 200 200" aria-hidden="true"></svg>
+            <svg id="burst-lines" class="burst-lines" viewBox="0 0 200 200" aria-hidden="true"></svg>
           </div>
           <div class="registry">
             <p id="kamon-name"></p>
