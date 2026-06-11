@@ -171,7 +171,8 @@ form {
   flex-direction: column;
   gap: 1.2rem;
   align-items: center;
-  margin-bottom: clamp(1.3rem, 3.2vh, 2.4rem);
+  /* 結界環が紋場の上へ張り出すぶん、ボタンとの間は広めに取る */
+  margin-bottom: clamp(2.2rem, 5.5vh, 3.6rem);
 }
 
 #name-input {
@@ -457,7 +458,8 @@ button {
 #kamon-owner {
   font-size: 0.88rem;
   color: var(--dim);
-  margin: 1.4rem 0 0;
+  /* こちらも結界環の下への張り出しを織り込む */
+  margin: 2.4rem 0 0;
 }
 
 #kamon-meta {
@@ -483,7 +485,7 @@ button {
   }
 
   #kamon-owner {
-    margin-top: 1.2rem;
+    margin-top: 1.6rem;
   }
 }
 
