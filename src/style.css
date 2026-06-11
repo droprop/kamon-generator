@@ -31,7 +31,7 @@ body {
   min-height: 100%;
   background:
     radial-gradient(120% 90% at 50% -10%, var(--ji-high) 0%, var(--ji) 52%, var(--ji-deep) 100%)
-    fixed var(--ji);
+    var(--ji);
   color: var(--text);
   font-family: 'Shippori Mincho B1', 'Hiragino Mincho ProN', 'Yu Mincho', YuMincho,
     'Noto Serif JP', serif;
@@ -41,14 +41,17 @@ body {
   overflow-x: hidden;
 }
 
-/* 紙肌のような粒子をごく薄く全面に */
+/*
+ * 紙肌のような粒子をごく薄く全面に。
+ * 注意: ここに mix-blend-mode を使うと、何かが動くたびに全画面ブレンドが
+ * 毎フレーム走り GPU を食い潰す。通常合成 + 低不透明度で質感だけ出す。
+ */
 body::before {
   content: '';
   position: fixed;
   inset: 0;
   background: var(--grain);
-  opacity: 0.06;
-  mix-blend-mode: multiply;
+  opacity: 0.05;
   pointer-events: none;
   z-index: 2;
 }
@@ -75,17 +78,15 @@ body::before {
   z-index: 0;
 }
 
+/*
+ * 静止画として一度だけ描く。
+ * 以前はここを無限回転させていたが、画面の1.65倍の巨大レイヤーを
+ * 常時コンポジットさせ続けることになり、待機中でも GPU を占有していた。
+ */
 .ambient svg {
   width: 165vmin;
   height: 165vmin;
   flex: none;
-  animation: ambient-turn 240s linear infinite;
-}
-
-@keyframes ambient-turn {
-  to {
-    transform: rotate(360deg);
-  }
 }
 
 /* ---------- レイアウト ---------- */
@@ -401,10 +402,6 @@ footer p {
 /* ---------- 動きを抑える設定 ---------- */
 
 @media (prefers-reduced-motion: reduce) {
-  .ambient svg {
-    animation: none;
-  }
-
   #generate-btn,
   #generate-btn:hover,
   #generate-btn:active {
