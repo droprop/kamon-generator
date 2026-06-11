@@ -22,16 +22,21 @@
   box-sizing: border-box;
 }
 
+/*
+ * 地のグラデーションは html(=文書全体の高さ)に敷く。
+ * body に敷くと描画基準がビューポート1枚分になり、スクロール先で
+ * グラデーションが途切れて地色との継ぎ目が見えてしまう。
+ */
 html {
-  height: 100%;
-}
-
-body {
-  margin: 0;
   min-height: 100%;
   background:
     radial-gradient(120% 90% at 50% -10%, var(--ji-high) 0%, var(--ji) 52%, var(--ji-deep) 100%)
     var(--ji);
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
   color: var(--text);
   font-family: 'Shippori Mincho B1', 'Hiragino Mincho ProN', 'Yu Mincho', YuMincho,
     'Noto Serif JP', serif;
@@ -91,18 +96,19 @@ body::before {
 
 /* ---------- レイアウト ---------- */
 
+/* 縦の余白は画面の高さに連動させ、低いモニタでは自動で詰める */
 main {
   position: relative;
   z-index: 1;
   max-width: 34rem;
   margin: 0 auto;
-  padding: 4.5rem 1.5rem 3rem;
+  padding: clamp(1.4rem, 4.5vh, 3.2rem) 1.5rem 3rem;
   text-align: center;
 }
 
 .emblem {
   width: 2.1rem;
-  margin: 0 auto 1.2rem;
+  margin: 0 auto 0.8rem;
   color: var(--kin);
   opacity: 0.95;
 }
@@ -118,14 +124,14 @@ h1 {
   font-weight: 600;
   letter-spacing: 0.45em;
   text-indent: 0.45em; /* letter-spacing の右端ぶんを相殺して光学的に中央へ */
-  margin: 0 0 1.1rem;
+  margin: 0 0 0.8rem;
   color: var(--text);
 }
 
 .lead {
   font-size: 0.92rem;
   color: var(--dim);
-  margin: 0 0 3.2rem;
+  margin: 0 0 clamp(1.3rem, 3.2vh, 2.4rem);
 }
 
 /* ---------- 入力 ---------- */
@@ -133,9 +139,9 @@ h1 {
 form {
   display: flex;
   flex-direction: column;
-  gap: 1.6rem;
+  gap: 1.2rem;
   align-items: center;
-  margin-bottom: 3.2rem;
+  margin-bottom: clamp(1.3rem, 3.2vh, 2.4rem);
 }
 
 #name-input {
@@ -243,7 +249,8 @@ button {
 
 .frame {
   position: relative;
-  width: min(74vw, 19.5rem);
+  /* 低いモニタでは紋場も縮め、入力欄から紋までが一画面に収まるようにする */
+  width: min(74vw, 19.5rem, 48vh);
 }
 
 /* 額装の金の罫 */
@@ -354,7 +361,7 @@ button {
 #kamon-owner {
   font-size: 0.88rem;
   color: var(--dim);
-  margin: 1.9rem 0 0;
+  margin: 1.4rem 0 0;
 }
 
 #kamon-meta {
@@ -387,7 +394,7 @@ button {
 /* ---------- フッター ---------- */
 
 footer {
-  margin-top: 4.5rem;
+  margin-top: 3rem;
   border-top: 1px solid rgba(143, 117, 54, 0.3);
   padding-top: 1.5rem;
 }
