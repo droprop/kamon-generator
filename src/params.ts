@@ -13,6 +13,8 @@ export type Motif =
 export type OuterRing = 'none' | 'thin' | 'thick' | 'double';
 export type LineStyle = 'fill' | 'stroke';
 export type CenterElement = 'none' | 'dot' | 'ring';
+/** 副紋: 主モチーフの間に挟む意匠(剣片喰・星梅鉢の構造) */
+export type Accent = 'none' | 'ken' | 'hoshi';
 
 export interface KamonParams {
   seed: number;
@@ -24,6 +26,7 @@ export interface KamonParams {
   lineStyle: LineStyle;
   strokeWidth: number;
   center: CenterElement;
+  accent: Accent;
   /** モチーフ形状の連続バリエーション(0〜1) */
   v1: number;
   v2: number;
@@ -79,8 +82,16 @@ export function generateKamon(name: string): KamonParams {
     ['none', 45], ['dot', 30], ['ring', 25],
   ]);
 
-  return {
-    seed, n, motif, outerRing, lineStyle, strokeWidth, center,
-    v1: rng(), v2: rng(), v3: rng(),
-  };
+  const v1 = rng();
+  const v2 = rng();
+  const v3 = rng();
+
+  // 副紋。rng の消費は既存の列の末尾に追加し、上記パラメータの互換を保つ。
+  // 扇形の間に余白を残すモチーフ・対称数でのみ採用する(融合・衝突の防止)。
+  const accentRoll = pickWeighted<Accent>(rng, [['none', 60], ['ken', 22], ['hoshi', 18]]);
+  const accentOk =
+    n <= 10 && (motif === 'petal' || motif === 'leaf' || motif === 'diamond' || motif === 'scale');
+  const accent = accentOk ? accentRoll : 'none';
+
+  return { seed, n, motif, outerRing, lineStyle, strokeWidth, center, accent, v1, v2, v3 };
 }

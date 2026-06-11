@@ -1,11 +1,11 @@
-import type { KamonParams, Motif, OuterRing } from './params';
+import type { Accent, KamonParams, Motif, OuterRing } from './params';
 
 /**
  * パラメータから決定論的に和風の紋名を合成する。
- * 形式: {外環}{陰?}{数詞}{モチーフ}(例:「丸に陰六つ花」「細輪に三つ巴」)
+ * 形式: {外環}{陰?}{副紋?}{数詞}{モチーフ}(例:「丸に剣六つ花」「細輪に三つ巴」)
  */
 
-const MOTIF_NAMES: Record<Motif, string> = {
+export const MOTIF_NAMES: Record<Motif, string> = {
   petal: '花',
   leaf: '葉',
   diamond: '菱',
@@ -28,7 +28,13 @@ const RING_PREFIX: Record<OuterRing, string> = {
   double: '二重輪に',
 };
 
+const ACCENT_NAMES: Record<Accent, string> = {
+  none: '',
+  ken: '剣', // 剣片喰などの「剣」
+  hoshi: '星', // 星梅鉢などの「星」
+};
+
 export function kamonName(p: KamonParams): string {
   const kage = p.lineStyle === 'stroke' ? '陰' : ''; // 陰=輪郭線のみの紋の伝統的呼称
-  return `${RING_PREFIX[p.outerRing]}${kage}${COUNT_NAMES[p.n]}${MOTIF_NAMES[p.motif]}`;
+  return `${RING_PREFIX[p.outerRing]}${kage}${ACCENT_NAMES[p.accent]}${COUNT_NAMES[p.n]}${MOTIF_NAMES[p.motif]}`;
 }

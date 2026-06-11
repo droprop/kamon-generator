@@ -49,6 +49,15 @@ function polar(r: number, a: number): [number, number] {
 const f = (x: number) => Number(x.toFixed(2));
 const pt = (p: [number, number]) => `${f(p[0])} ${f(p[1])}`;
 
+/** 点を中心(C,C)まわりに ang(ラジアン、時計回り正)回転 */
+function rotPt(p: [number, number], ang: number): [number, number] {
+  const dx = p[0] - C;
+  const dy = p[1] - C;
+  const c = Math.cos(ang);
+  const s = Math.sin(ang);
+  return [C + dx * c - dy * s, C + dx * s + dy * c];
+}
+
 /** 3点を通る二次ベジェの制御点(t=0.5 で mid を通る) */
 function quadControl(p1: [number, number], p2: [number, number], mid: [number, number]): [number, number] {
   return [2 * mid[0] - (p1[0] + p2[0]) / 2, 2 * mid[1] - (p1[1] + p2[1]) / 2];
@@ -64,7 +73,7 @@ interface MotifCtx {
 
 /* ---------------- 植物系 ---------------- */
 
-/** 花弁: 中心付近から外周へ伸びる弁。v2 で先端の丸み(0=尖り) */
+/** 花弁: 中心付近から外周へ伸びる弁。v2 で先端の丸み(0=尖り)、v3 が高いと桜式の切れ込み */
 function petal({ m, ha, p }: MotifCtx): PlanElement[] {
   const r0 = 10;
   const w = Math.min(m * Math.sin(ha) * (0.78 + 0.3 * p.v1), m * 0.5);
@@ -72,10 +81,16 @@ function petal({ m, ha, p }: MotifCtx): PlanElement[] {
   const h = m - r0;
   const yb = C - r0;
   const yt = C - m;
+  // 先端: 丸い弁(tw が十分)かつ v3 が高ければ中央に切れ込みを入れる(桜)
+  const notch = p.v3 > 0.62 && tw > 3 ? h * 0.1 : 0;
+  const tip = notch
+    ? `C ${f(C - tw * 0.7)} ${f(yt)} ${f(C - tw * 0.25)} ${f(yt)} ${C} ${f(yt + notch)} ` +
+      `C ${f(C + tw * 0.25)} ${f(yt)} ${f(C + tw * 0.7)} ${f(yt)} ${f(C + tw)} ${f(yt + h * 0.06)} `
+    : `C ${f(C - tw * 0.55)} ${f(yt)} ${f(C + tw * 0.55)} ${f(yt)} ${f(C + tw)} ${f(yt + h * 0.06)} `;
   const d =
     `M ${C} ${f(yb)} ` +
     `C ${f(C - w)} ${f(yb - h * 0.18)} ${f(C - w)} ${f(yb - h * 0.62)} ${f(C - tw)} ${f(yt + h * 0.06)} ` +
-    `C ${f(C - tw * 0.55)} ${f(yt)} ${f(C + tw * 0.55)} ${f(yt)} ${f(C + tw)} ${f(yt + h * 0.06)} ` +
+    tip +
     `C ${f(C + w)} ${f(yb - h * 0.62)} ${f(C + w)} ${f(yb - h * 0.18)} ${C} ${f(yb)} Z`;
   return [{ kind: 'path', d, paint: 'ink', mode: 'fill' }];
 }
@@ -125,15 +140,27 @@ function diamond({ m, ha, p }: MotifCtx): PlanElement[] {
   return els;
 }
 
-/** 鱗: 外向きの三角形 */
+/** 鱗: 外向きの三角形。v3 が高いと白抜きの内鱗(入れ子) */
 function scale({ m, ha, p }: MotifCtx): PlanElement[] {
   const rb = m * (0.22 + 0.18 * p.v1);
   const spread = ha * (0.7 + 0.25 * p.v2);
   const apex = polar(m, 0);
   const bl = polar(rb, -spread);
   const br = polar(rb, spread);
-  const d = `M ${pt(apex)} L ${pt(br)} L ${pt(bl)} Z`;
-  return [{ kind: 'path', d, paint: 'ink', mode: 'fill' }];
+  const outer = `M ${pt(apex)} L ${pt(br)} L ${pt(bl)} Z`;
+  if (p.v3 > 0.62) {
+    const g: [number, number] = [
+      (apex[0] + bl[0] + br[0]) / 3,
+      (apex[1] + bl[1] + br[1]) / 3,
+    ];
+    const shrink = (q: [number, number]): [number, number] => [
+      g[0] + (q[0] - g[0]) * 0.45,
+      g[1] + (q[1] - g[1]) * 0.45,
+    ];
+    const inner = ` M ${pt(shrink(apex))} L ${pt(shrink(br))} L ${pt(shrink(bl))} Z`;
+    return [{ kind: 'path', d: outer + inner, paint: 'ink', mode: 'fill', evenOdd: true }];
+  }
+  return [{ kind: 'path', d: outer, paint: 'ink', mode: 'fill' }];
 }
 
 /** 星: 小円の環。v3 が高いと蛇の目(白抜き穴) */
@@ -244,6 +271,37 @@ const MOTIF_FNS: Record<KamonParams['motif'], (ctx: MotifCtx) => PlanElement[]> 
   petal, leaf, diamond, scale, star, wave, cloud, tomoe,
 };
 
+/* ---------------- 副紋(主モチーフの間 = 半角 ha 回した位置に挟む) ---------------- */
+
+/**
+ * 剣: 主モチーフの間に立つ細身の剣先(剣片喰の構造)。
+ * 主モチーフの張り出しが最も細る外周側(0.66m〜m)だけに置き、衝突を避ける。
+ */
+function kenAccent(m: number, ha: number): PlanElement[] {
+  const w = Math.min(m * Math.sin(ha) * 0.22, m * 0.05);
+  if (w < 1.1) return [];
+  const r0 = m * 0.66;
+  const rm = m * 0.82;
+  const up: [number, number][] = [
+    [C, C - m],
+    [C + w, C - rm],
+    [C + w * 0.5, C - r0],
+    [C - w * 0.5, C - r0],
+    [C - w, C - rm],
+  ];
+  const q = up.map((v) => rotPt(v, ha));
+  const d = `M ${pt(q[0])} L ${pt(q[1])} L ${pt(q[2])} L ${pt(q[3])} L ${pt(q[4])} Z`;
+  return [{ kind: 'path', d, paint: 'ink', mode: 'fill' }];
+}
+
+/** 星: 主モチーフの間に置く珠(星梅鉢の構造) */
+function hoshiAccent(m: number, ha: number): PlanElement[] {
+  const r = Math.min(m * Math.sin(ha) * 0.3, m * 0.075);
+  if (r < 1.6) return [];
+  const [cx, cy] = rotPt([C, C - m * 0.82], ha);
+  return [{ kind: 'circle', cx: f(cx), cy: f(cy), r: f(r), paint: 'ink', mode: 'fill' }];
+}
+
 /* ---------------- 合成 ---------------- */
 
 export function buildPlan(p: KamonParams): KamonPlan {
@@ -283,6 +341,10 @@ export function buildPlan(p: KamonParams): KamonPlan {
 
   const ctx: MotifCtx = { m: motifMax, ha: Math.PI / p.n, p };
   let motifElements = MOTIF_FNS[p.motif](ctx);
+
+  // 副紋: 主モチーフと一緒に回転するよう motifElements に加える
+  if (p.accent === 'ken') motifElements = [...motifElements, ...kenAccent(motifMax, ctx.ha)];
+  else if (p.accent === 'hoshi') motifElements = [...motifElements, ...hoshiAccent(motifMax, ctx.ha)];
 
   // 線主体: 塗り要素をアウトライン化。白抜き(paper)要素は墨線に置き換える
   if (p.lineStyle === 'stroke') {

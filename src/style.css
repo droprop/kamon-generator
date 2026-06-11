@@ -1,8 +1,21 @@
+/*
+ * あなたの紋 — 「紋帳の昼」
+ * 生成りの和紙の明るい地に、紋場の白い紙が一枚重なって浮かぶ。
+ * 罫と環境光は古金、落款と主動作は朱、文字は墨。
+ */
+
 :root {
-  --ink: #1a1a1a;
-  --paper: #fcfbf8;
-  --ink-soft: #555;
-  --line: #d8d4cc;
+  --ji-high: #f8f3e7; /* 光の当たる和紙 */
+  --ji: #f1ead8; /* 生成りの地 */
+  --ji-deep: #e4d9bf; /* 端の陰り */
+  --washi: #fbf8ee; /* 紋場の白い紙 */
+  --sumi: #211c14; /* 墨 */
+  --shu: #bc4232; /* 朱(落款・主動作) */
+  --shu-deep: #99291d;
+  --kin: #8f7536; /* 古金(罫・銘) */
+  --text: #2a241a;
+  --dim: #8a8068;
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0.5 0 0 0 0 0.46 0 0 0 0 0.38 0 0 0 0.6 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
 * {
@@ -16,84 +29,254 @@ html {
 body {
   margin: 0;
   min-height: 100%;
-  background: var(--paper);
-  color: var(--ink);
-  font-family: 'Hiragino Mincho ProN', 'Hiragino Serif', 'Yu Mincho', YuMincho,
+  background:
+    radial-gradient(120% 90% at 50% -10%, var(--ji-high) 0%, var(--ji) 52%, var(--ji-deep) 100%)
+    fixed var(--ji);
+  color: var(--text);
+  font-family: 'Shippori Mincho B1', 'Hiragino Mincho ProN', 'Yu Mincho', YuMincho,
     'Noto Serif JP', serif;
+  font-weight: 400;
   line-height: 1.8;
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
 
+/* 紙肌のような粒子をごく薄く全面に */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: var(--grain);
+  opacity: 0.06;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+  z-index: 2;
+}
+
+::selection {
+  background: var(--shu);
+  color: var(--washi);
+}
+
+:focus-visible {
+  outline: 2px solid var(--kin);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* ---------- 環境光: 巡るコンパス円 ---------- */
+
+.ambient {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.ambient svg {
+  width: 165vmin;
+  height: 165vmin;
+  flex: none;
+  animation: ambient-turn 240s linear infinite;
+}
+
+@keyframes ambient-turn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---------- レイアウト ---------- */
+
 main {
-  max-width: 30rem;
+  position: relative;
+  z-index: 1;
+  max-width: 34rem;
   margin: 0 auto;
-  padding: 4rem 1.5rem 3rem;
+  padding: 4.5rem 1.5rem 3rem;
   text-align: center;
 }
 
+.emblem {
+  width: 2.1rem;
+  margin: 0 auto 1.2rem;
+  color: var(--kin);
+  opacity: 0.95;
+}
+
+.emblem svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
 h1 {
-  font-size: 1.8rem;
+  font-size: 2.1rem;
   font-weight: 600;
-  letter-spacing: 0.5em;
-  text-indent: 0.5em; /* letter-spacing の右端ぶんを相殺して光学的に中央へ */
-  margin: 0 0 1rem;
+  letter-spacing: 0.45em;
+  text-indent: 0.45em; /* letter-spacing の右端ぶんを相殺して光学的に中央へ */
+  margin: 0 0 1.1rem;
+  color: var(--text);
 }
 
 .lead {
   font-size: 0.92rem;
-  color: var(--ink-soft);
-  margin: 0 0 3rem;
+  color: var(--dim);
+  margin: 0 0 3.2rem;
 }
+
+/* ---------- 入力 ---------- */
 
 form {
   display: flex;
   flex-direction: column;
-  gap: 1.2rem;
+  gap: 1.6rem;
   align-items: center;
-  margin-bottom: 2.5rem;
+  margin-bottom: 3.2rem;
 }
 
 #name-input {
   width: 100%;
-  max-width: 22rem;
-  padding: 0.6rem 0.2rem;
+  max-width: 23rem;
+  padding: 0.65rem 0.2rem;
   font: inherit;
-  font-size: 1.05rem;
+  font-size: 1.08rem;
   text-align: center;
-  color: var(--ink);
+  color: var(--text);
   background: transparent;
   border: none;
-  border-bottom: 1px solid var(--ink);
+  border-bottom: 1px solid rgba(143, 117, 54, 0.5);
   border-radius: 0;
   outline: none;
+  caret-color: var(--shu);
+  transition: border-color 0.25s, box-shadow 0.25s;
+}
+
+#name-input:focus {
+  border-bottom-color: var(--kin);
+  box-shadow: 0 12px 20px -16px rgba(143, 117, 54, 0.6);
 }
 
 #name-input::placeholder {
-  color: #aaa;
-  font-size: 0.88rem;
+  color: rgba(138, 128, 104, 0.7);
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
 }
+
+/* ---------- ボタン ---------- */
 
 button {
   font: inherit;
-  font-size: 0.95rem;
-  letter-spacing: 0.2em;
-  text-indent: 0.2em;
-  color: var(--ink);
-  background: transparent;
-  border: 1px solid var(--ink);
-  padding: 0.55rem 2.2rem;
   cursor: pointer;
-  transition: background-color 0.2s, color 0.2s;
+  border-radius: 999px;
 }
 
-button:hover {
-  background: var(--ink);
-  color: var(--paper);
+#generate-btn {
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.4em;
+  text-indent: 0.4em;
+  color: #f8f1df;
+  background: linear-gradient(180deg, #cb4d3c 0%, var(--shu) 45%, var(--shu-deep) 100%);
+  border: none;
+  padding: 0.85rem 3.2rem;
+  box-shadow:
+    0 10px 26px -10px rgba(153, 41, 29, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.25);
+  transition: transform 0.18s ease, box-shadow 0.25s ease, filter 0.18s ease;
+}
+
+#generate-btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.07);
+  box-shadow:
+    0 14px 32px -10px rgba(153, 41, 29, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.25);
+}
+
+#generate-btn:active {
+  transform: translateY(0) scale(0.97);
+  filter: brightness(0.96);
+}
+
+.actions {
+  display: flex;
+  gap: 0.8rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 1.7rem;
+}
+
+.actions button {
+  font-size: 0.82rem;
+  letter-spacing: 0.14em;
+  text-indent: 0.14em;
+  padding: 0.5rem 1.3rem;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.25);
+  border: 1px solid rgba(42, 36, 26, 0.3);
+  transition: border-color 0.2s, background-color 0.2s, color 0.2s;
+}
+
+.actions button:hover {
+  border-color: var(--kin);
+  background: rgba(143, 117, 54, 0.1);
+}
+
+.actions button[aria-pressed='true'] {
+  border-color: var(--kin);
+  color: var(--kin);
+}
+
+/* ---------- 紋場(重ねた白い紙) ---------- */
+
+.stage {
+  position: relative;
+  width: fit-content;
+  margin: 0 auto;
+}
+
+.frame {
+  position: relative;
+  width: min(74vw, 19.5rem);
+}
+
+/* 額装の金の罫 */
+.frame::before {
+  content: '';
+  position: absolute;
+  inset: -11px;
+  border: 1px solid rgba(143, 117, 54, 0.4);
+  border-radius: 50%;
+  pointer-events: none;
 }
 
 #kamon-container {
-  width: min(78vw, 21rem);
-  margin: 0 auto 1.4rem;
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow:
+    0 22px 50px -16px rgba(92, 72, 38, 0.42),
+    0 4px 14px rgba(92, 72, 38, 0.18),
+    0 0 0 1px rgba(143, 117, 54, 0.3);
+}
+
+/* 和紙の肌理と縁の陰り(PNG書き出しには含まれない、画面上だけの質感) */
+#kamon-container::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--grain);
+  opacity: 0.35;
+  mix-blend-mode: multiply;
+  box-shadow: inset 0 0 40px rgba(120, 96, 52, 0.16);
+  pointer-events: none;
 }
 
 #kamon-container svg {
@@ -102,70 +285,141 @@ button:hover {
   height: auto;
 }
 
-@keyframes kamon-in {
-  from {
-    opacity: 0;
-    transform: scale(0.93);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+/* 完成の瞬間に一度だけ灯る朱の気配 */
+.bloom {
+  position: absolute;
+  inset: -34%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(188, 66, 50, 0.16), rgba(188, 66, 50, 0) 70%);
+  opacity: 0;
+  pointer-events: none;
 }
 
-.kamon-enter {
-  animation: kamon-in 0.55s ease-out both;
+/* 打ち込みの瞬間に走り抜ける衝撃波 */
+.shockwave {
+  position: absolute;
+  inset: -11px;
+  border-radius: 50%;
+  border: 1px solid rgba(143, 117, 54, 0.85);
+  opacity: 0;
+  pointer-events: none;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .kamon-enter {
-    animation: none;
-  }
-}
+/* ---------- 紋帳の記載(縦書きの銘と落款) ---------- */
 
-#kamon-owner {
-  font-size: 0.9rem;
-  color: var(--ink-soft);
-  margin: 0;
+.registry {
+  position: absolute;
+  top: 6%;
+  left: 100%;
+  margin-left: 1.7rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.2rem;
 }
 
 #kamon-name {
-  font-size: 1.35rem;
-  letter-spacing: 0.25em;
-  text-indent: 0.25em;
-  margin: 0.3rem 0 1.8rem;
+  margin: 0;
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  font-size: 1.42rem;
+  font-weight: 500;
+  letter-spacing: 0.32em;
+  color: var(--text);
+  white-space: nowrap;
 }
 
-.actions {
-  display: flex;
-  gap: 0.8rem;
-  justify-content: center;
-  flex-wrap: wrap;
+#kamon-name span {
+  display: inline-block;
 }
 
-.actions button {
-  font-size: 0.82rem;
-  padding: 0.45rem 1.2rem;
+.seal {
+  display: grid;
+  place-items: center;
+  width: 2.35rem;
+  height: 2.35rem;
+  font-size: 1.2rem;
+  font-weight: 700;
+  line-height: 1;
+  color: #f6efdf;
+  background: radial-gradient(circle at 35% 30%, #d05a45, var(--shu) 55%, #952a1f);
+  border-radius: 4px;
+  transform: rotate(-3deg);
+  box-shadow:
+    inset 0 0 7px rgba(70, 8, 0, 0.5),
+    0 3px 10px rgba(92, 72, 38, 0.35);
 }
+
+#kamon-owner {
+  font-size: 0.88rem;
+  color: var(--dim);
+  margin: 1.9rem 0 0;
+}
+
+#kamon-meta {
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  color: var(--kin);
+  margin: 0.45rem 0 0;
+}
+
+@media (max-width: 600px) {
+  .registry {
+    position: static;
+    margin: 1.5rem 0 0;
+    flex-direction: row;
+    justify-content: center;
+    gap: 0.9rem;
+  }
+
+  #kamon-name {
+    writing-mode: horizontal-tb;
+    font-size: 1.3rem;
+    letter-spacing: 0.26em;
+  }
+
+  #kamon-owner {
+    margin-top: 1.2rem;
+  }
+}
+
+/* ---------- フッター ---------- */
 
 footer {
-  margin-top: 4rem;
-  border-top: 1px solid var(--line);
+  margin-top: 4.5rem;
+  border-top: 1px solid rgba(143, 117, 54, 0.3);
   padding-top: 1.5rem;
 }
 
 footer p {
-  font-size: 0.74rem;
-  color: var(--ink-soft);
+  font-size: 0.72rem;
+  color: rgba(138, 128, 104, 0.95);
   text-align: left;
   margin: 0;
 }
 
-/* デバッグギャラリー(?debug=gallery) */
+/* ---------- 動きを抑える設定 ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .ambient svg {
+    animation: none;
+  }
+
+  #generate-btn,
+  #generate-btn:hover,
+  #generate-btn:active {
+    transform: none;
+  }
+}
+
+/* ---------- デバッグギャラリー(?debug=gallery) ---------- */
+
 #gallery {
+  position: relative;
+  z-index: 1;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 1.2rem;
+  gap: 1.4rem;
   max-width: 64rem;
   margin: 2rem auto;
   padding: 0 1rem;
@@ -175,8 +429,16 @@ footer p {
   margin: 0;
 }
 
+#gallery svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 50%;
+  box-shadow: 0 8px 22px -8px rgba(92, 72, 38, 0.35);
+}
+
 #gallery figcaption {
   font-size: 0.7rem;
-  color: var(--ink-soft);
-  margin-top: 0.3rem;
+  color: var(--dim);
+  margin-top: 0.4rem;
 }

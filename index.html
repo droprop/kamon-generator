@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>あなたの紋 — 名前から生まれる紋様ジェネレーター</title>
     <meta name="description" content="名前を入力すると、世界にひとつの紋様が生まれます。同じ名前からは必ず同じ紋が。家紋風のジェネラティブデザイン。" />
+    <meta name="theme-color" content="#f1ead8" />
     <meta property="og:title" content="あなたの紋" />
     <meta property="og:description" content="名前から生まれる、世界にひとつの紋様。" />
     <meta property="og:type" content="website" />
@@ -12,11 +13,32 @@
     <!-- デプロイ後、og:image は絶対URLに書き換えること(多くのクローラは相対URLを解釈しない) -->
     <meta property="og:image" content="https://your-kamon.vercel.app/og.png" />
     <meta name="twitter:card" content="summary_large_image" />
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='44' fill='none' stroke='%231a1a1a' stroke-width='7'/%3E%3Ccircle cx='50' cy='50' r='16' fill='%231a1a1a'/%3E%3C/svg%3E" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='44' fill='none' stroke='%23211c14' stroke-width='7'/%3E%3Ccircle cx='50' cy='50' r='16' fill='%23bc4232'/%3E%3C/svg%3E" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@400;500;600;700&display=swap" rel="stylesheet" />
   </head>
   <body>
+    <!-- 環境光: 紋の作図を思わせるコンパス円がゆっくりと巡る -->
+    <div class="ambient" aria-hidden="true">
+      <svg viewBox="0 0 1000 1000">
+        <g fill="none" stroke="#8f7536">
+          <circle cx="500" cy="500" r="190" stroke-opacity="0.14" />
+          <circle cx="500" cy="500" r="300" stroke-opacity="0.10" stroke-dasharray="2 10" />
+          <circle cx="500" cy="500" r="412" stroke-opacity="0.08" />
+          <circle cx="500" cy="500" r="478" stroke-opacity="0.06" stroke-dasharray="1 16" />
+        </g>
+      </svg>
+    </div>
+
     <main>
       <header>
+        <div class="emblem" aria-hidden="true">
+          <svg viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="44" fill="none" stroke="currentColor" stroke-width="5" />
+            <circle cx="50" cy="50" r="15" fill="currentColor" />
+          </svg>
+        </div>
         <h1>あなたの紋</h1>
         <p class="lead">名前から生まれる、世界にひとつの紋様。<br />同じ名前からは、必ず同じ紋が。</p>
       </header>
@@ -33,9 +55,19 @@
       </form>
 
       <section id="result" hidden>
-        <div id="kamon-container" aria-live="polite"></div>
+        <div class="stage">
+          <div class="frame" id="kamon-frame">
+            <div id="kamon-container" aria-live="polite"></div>
+            <div class="bloom" id="bloom" aria-hidden="true"></div>
+            <div class="shockwave" id="shockwave" aria-hidden="true"></div>
+          </div>
+          <div class="registry">
+            <p id="kamon-name"></p>
+            <span id="kamon-seal" class="seal" aria-hidden="true"></span>
+          </div>
+        </div>
         <p id="kamon-owner"></p>
-        <p id="kamon-name"></p>
+        <p id="kamon-meta"></p>
         <div class="actions">
           <button type="button" id="save-btn">画像を保存</button>
           <button type="button" id="share-btn">Xでシェア</button>
